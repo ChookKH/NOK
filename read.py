@@ -80,6 +80,7 @@ def process_volvo_report(selected_sheet):
 
     column_sum = filtered.sum(axis=0).rename('OK')
     filtered = pd.concat([filtered, pd.DataFrame(column_sum).T])
+
     grouped_columns = filtered.columns.str[-5:-1]
     grouped_sums = (filtered.T
                     .groupby(grouped_columns)
@@ -88,6 +89,9 @@ def process_volvo_report(selected_sheet):
     )
 
     grouped_sum_df = grouped_sums.loc[['OK']].T
+
+    # Retain orginal columns
+    grouped_sum_df = grouped_sum_df.reindex(grouped_columns)
 
     # Read NOK data (Manually change iloc)
     VOLVO_NOK = pd.read_excel('NOK tracking.xlsx')
