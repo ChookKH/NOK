@@ -1,4 +1,5 @@
 import pandas as pd
+import sys
 
 # ==== ==== ====
 # Function to process MAN report
@@ -9,7 +10,7 @@ def process_man_report(selected_sheet):
     sheet_data = pd.read_excel(MAN_Report, sheet_name=selected_sheet)
     
     # Filter to display only wanted data (manually change iloc)
-    filtered = (sheet_data.iloc[1:29, 4:15]
+    filtered = (sheet_data.iloc[1:23, 4:15]
                 .fillna(0)
                 .rename(columns=sheet_data.iloc[1, 4:15])
                 .iloc[1:]
@@ -32,7 +33,7 @@ def process_man_report(selected_sheet):
 
     # Read NOK data (manually change iloc)
     MAN_NOK = pd.read_excel('NOK tracking.xlsx')
-    MAN_NOK = MAN_NOK.iloc[25:31][['NOK FULL BOXES', 'Unnamed: 9']].reset_index(drop=True)
+    MAN_NOK = MAN_NOK.iloc[25:31][['NOK FULL BOXES', 'Unnamed: 11']].reset_index(drop=True)
     MAN_NOK.columns = ['P/N', 'NOK']
     MAN_NOK = MAN_NOK.reindex([5] + list(range(5))).reset_index(drop=True)
 
@@ -74,7 +75,7 @@ def process_volvo_report(selected_sheet):
     sheet_data = pd.read_excel(VOLVO_Report, sheet_name=selected_sheet)
     
     # Filter to display only wanted data (manually change iloc)
-    filtered = (sheet_data.iloc[0:35, 4:16]
+    filtered = (sheet_data.iloc[0:34, 4:16]
                 .fillna(0)
     )
 
@@ -95,7 +96,7 @@ def process_volvo_report(selected_sheet):
 
     # Read NOK data (Manually change iloc)
     VOLVO_NOK = pd.read_excel('NOK tracking.xlsx')
-    VOLVO_NOK = VOLVO_NOK.iloc[34:46][['NOK FULL BOXES', 'Unnamed: 9']].reset_index(drop=True)
+    VOLVO_NOK = VOLVO_NOK.iloc[34:46][['NOK FULL BOXES', 'Unnamed: 11']].reset_index(drop=True)
     VOLVO_NOK.columns = ['P/N', 'NOK']
 
     # Finalize monthly report for VOLVO
@@ -103,7 +104,13 @@ def process_volvo_report(selected_sheet):
     grouped_sum_df.reset_index(drop=True, inplace=True)
     VOLVO_NOK['OK'] = grouped_sum_df['OK']
     VOLVO_NOK['Controlled'] = VOLVO_NOK['NOK'] + VOLVO_NOK['OK']
-    VOLVO_NOK['NOK rate(%)'] = (VOLVO_NOK['NOK'] / VOLVO_NOK['Controlled']) * 100
+
+    # Accomodation for if controlled number is 0
+    VOLVO_NOK['NOK rate(%)'] = VOLVO_NOK.apply(
+        lambda row: (row['NOK'] / row['Controlled']) * 100 if row['Controlled'] != 0 else 0, 
+        axis=1
+    )
+
     VOLVO_NOK['NOK'], VOLVO_NOK['OK'] = VOLVO_NOK['OK'], VOLVO_NOK['NOK']
     VOLVO_NOK = VOLVO_NOK.rename(columns={'NOK': 'OK', 'OK': 'NOK'})
 
